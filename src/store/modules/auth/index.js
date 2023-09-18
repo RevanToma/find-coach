@@ -1,16 +1,22 @@
+let timer;
+
 export default {
   state() {
     return {
       userId: null,
       token: null,
-      tokenExpiration: null
+      tokenExpiration: null,
+      didAutoLogout: false
     };
   },
   mutations: {
     setUser(state, payload) {
       state.token = payload.token;
       state.userId = payload.userId;
-      state.tokenExpiration = payload.tokenExpiration;
+      state.didAutoLogout = false;
+    },
+    setAutoLogout(state) {
+      state.didAutoLogout = true;
     }
   },
   actions: {
@@ -27,10 +33,10 @@ export default {
       });
     },
     logOutUser(context) {
+      clearTimeout(timer);
       context.commit('setUser', {
         token: null,
-        userId: null,
-        tokenExpiration: null
+        userId: null
       });
     },
     async auth(context, payload) {
@@ -51,15 +57,45 @@ export default {
       const resData = await response.json();
 
       if (!response.ok) {
-        const error = new Error(resData.message || 'Failed to authenticate.');
+        let errorMsg = '';
+        if (resData.error.message === 'EMAIL_EXISTS') {
+          errorMsg = 'Email already exist!';
+        }
+        if (resData.error.message === 'INVALID_LOGIN_CREDENTIALS') {
+          errorMsg = 'Wrong email adress or password.';
+        }
+        const error = new Error(errorMsg || 'Failed to authenticate.');
         throw error;
       }
+      const expiresIn = +resData.expiresIn * 1000;
+      const expirationData = new Date().getTime() + expiresIn;
+
+      timer = setTimeout(() => {
+        context.dispatch('autoLogout');
+      }, expiresIn);
 
       context.commit('setUser', {
         token: resData.idToken,
         userId: resData.localId,
-        tokenExpiration: resData.expiresIn
+        tokenExpiration: expirationData
       });
+    },
+    tryLogin(state, context) {
+      const tokenExpire = state.rootGetters.tokenExpiration;
+
+      const expiresIn = +tokenExpire - new Date().getTime();
+
+      if (expiresIn < 0) {
+        return;
+      }
+
+      timer = setTimeout(() => {
+        context.dispatch('autoLogout');
+      }, expiresIn);
+    },
+    autoLogout(context) {
+      context.dispatch('logOutUser');
+      context.commit('setAutoLogout');
     }
   },
   getters: {
@@ -68,6 +104,12 @@ export default {
     },
     isAuthenticated(state) {
       return !!state.token;
+    },
+    tokenExpiration(state) {
+      return state.tokenExpiration;
+    },
+    didAutoLogout(state) {
+      return state.didAutoLogout;
     }
   }
 };

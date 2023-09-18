@@ -35,17 +35,21 @@ export default {
 </script>
 <style scoped>
 header {
-  height: 5rem;
+  height: min-content;
+  min-height: 5rem;
   background-color: #3d008d;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;
+  padding: 0.3rem;
 }
 nav {
   flex: 1;
 }
-
+ul {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 header a {
   text-decoration: none;
   color: #f391e3;
