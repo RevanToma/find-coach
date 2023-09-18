@@ -38,8 +38,12 @@ export default {
       context.commit('addRequest', newRequest)
     },
     async fetchRequest(context) {
+      const token = context.rootGetters.token
+
       const coachId = context.rootGetters.userId
-      const response = await fetch(`${import.meta.env.VITE_FIREBASE_API}/requests/${coachId}.json`)
+      const response = await fetch(
+        `${import.meta.env.VITE_FIREBASE_API}/requests/${coachId}.json?auth=${token}`
+      )
       const resData = await response.json()
 
       if (!response.ok) {

@@ -1,7 +1,8 @@
-import { createStore } from 'vuex'
-import CoachesModule from './modules/coaches/index'
-import RequestModule from './modules/requests/index'
-import AuthModule from './modules/auth/index'
+import { createStore } from 'vuex';
+import createPersistedState from 'vuex-persistedstate';
+import CoachesModule from './modules/coaches/index';
+import RequestModule from './modules/requests/index';
+import AuthModule from './modules/auth/index';
 const store = createStore({
   modules: {
     coaches: CoachesModule,
@@ -11,9 +12,15 @@ const store = createStore({
 
   getters: {
     userId(state) {
-      return state.userId
+      return state.userId;
     }
-  }
-})
+  },
+  plugins: [
+    createPersistedState({
+      key: 'User',
+      paths: ['auth']
+    })
+  ]
+});
 
-export default store
+export default store;

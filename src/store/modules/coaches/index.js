@@ -46,10 +46,14 @@ export default {
         hourlyRate: data.rate,
         areas: data.areas
       }
-      const response = await fetch(`${import.meta.env.VITE_FIREBASE_API}/coaches/${userId}.json`, {
-        method: 'PUT',
-        body: JSON.stringify(coachData)
-      })
+      const token = context.rootGetters.token
+      const response = await fetch(
+        `${import.meta.env.VITE_FIREBASE_API}/coaches/${userId}.json?auth=${token}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(coachData)
+        }
+      )
       // const resData = await response.json()
 
       if (!response.ok) {
